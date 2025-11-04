@@ -1,6 +1,8 @@
 # Maintenance Request Clould Based
 
-## Programming Language
+## Project Information (from the Report)
+
+### Programming Language
 
 - Flutter
 - Sql
@@ -8,7 +10,7 @@
 - Python
 - Javascript
 
-## Cloud Technology/Component
+### Cloud Technology/Component
 
 | Component      | Description                                              | Role in System                                           |
 | -------------- | -------------------------------------------------------- | -------------------------------------------------------- |
@@ -19,7 +21,7 @@
 | Amazon Cognito | Authentication service                                   | Manages logins and Manages roles.                        |
 | Amazon SNS     | Notification system.                                     | Sends push notifications to the mobile app               |
 
-## Framework and Tools
+### Framework and Tools
 
 | Purpose                        | Tools                     |
 | ------------------------------ | ------------------------- |
