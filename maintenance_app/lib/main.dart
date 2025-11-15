@@ -2,7 +2,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-void main() => runApp(const MaintenanceApp());
+import 'package:flutter/material.dart';
+import 'connect.dart'; 
+
+void main() async {
+  await initializeSupabase(); 
+
+  runApp(const MaintenanceApp());
+}
 
 // -------------------- ENUMS AND MODELS --------------------
 enum UserRole { user, staff, admin }
