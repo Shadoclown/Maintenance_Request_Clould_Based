@@ -1,33 +1,16 @@
-# Maintenance Request Clould Based
+# maintenance_app
 
-## Project Information (from the Report)
+A new Flutter project.
 
-### Programming Language
+## Getting Started
 
-- Flutter
-- Sql
-- CSS + Tailwind
-- Python
-- Javascript
+This project is a starting point for a Flutter application.
 
-### Cloud Technology/Component
+A few resources to get you started if this is your first Flutter project:
 
-| Component      | Description                                              | Role in System                                           |
-| -------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| Amazon API     | Manages API requests between the mobile app and backend. | Acts as the “entry point” for Flutter app requests       |
-| Amazon ECS     | Runs backend logic                                       | Handles request                                          |
-| Amazon RDS     | Relational Database Service (Supabase).                  | Stores user accounts, requests, complaints, and history. |
-| Amazon S3      | File Storage.                                            | Stores File Attachment                                   |
-| Amazon Cognito | Authentication service                                   | Manages logins and Manages roles.                        |
-| Amazon SNS     | Notification system.                                     | Sends push notifications to the mobile app               |
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-### Framework and Tools
-
-| Purpose                        | Tools                     |
-| ------------------------------ | ------------------------- |
-| Project Management             | Jira                      |
-| Version Control                | GitHub                    |
-| Code Editor                    | Visual Studio Code        |
-| Front-end/Back-end Development | Flutter, Python           |
-| Database Management System     | Supabase                  |
-| Software Testing               | Flutter Testing Framework |
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
