@@ -1,16 +1,33 @@
-# maintenance_app
+# Maintenance Request Clould Based
 
-A new Flutter project.
+## Project Information (from the Report)
 
-## Getting Started
+### Programming Language
 
-This project is a starting point for a Flutter application.
+- Flutter
+- Sql
+- CSS + Tailwind
+- Python
+- Javascript
 
-A few resources to get you started if this is your first Flutter project:
+### Cloud Technology/Component
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+| Component      | Description                                              | Role in System                                           |
+| -------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| Amazon API     | Manages API requests between the mobile app and backend. | Acts as the “entry point” for Flutter app requests       |
+| Amazon ECS     | Runs backend logic                                       | Handles request                                          |
+| Amazon RDS     | Relational Database Service (Supabase).                  | Stores user accounts, requests, complaints, and history. |
+| Amazon S3      | File Storage.                                            | Stores File Attachment                                   |
+| Amazon Cognito | Authentication service                                   | Manages logins and Manages roles.                        |
+| Amazon SNS     | Notification system.                                     | Sends push notifications to the mobile app               |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Framework and Tools
+
+| Purpose                        | Tools                     |
+| ------------------------------ | ------------------------- |
+| Project Management             | Jira                      |
+| Version Control                | GitHub                    |
+| Code Editor                    | Visual Studio Code        |
+| Front-end/Back-end Development | Flutter, Python           |
+| Database Management System     | Supabase                  |
+| Software Testing               | Flutter Testing Framework |
