@@ -1,0 +1,14 @@
+{
+  "users": [
+    { "id": "1", "name": "Alice", "email": "alice@example.com", "password": "password123", "role": "user" },
+    { "id": "2", "name": "Bob", "email": "bob@example.com", "password": "password123", "role": "user" },
+    { "id": "tech1", "name": "Charlie", "email": "charlie@example.com", "password": "tech123", "role": "technician" },
+    { "id": "it1", "name": "David", "email": "david@example.com", "password": "it123", "role": "IT support" }
+  ],
+  "requests": [
+    { "id": 1, "title": "Printer not working", "description": "The printer in room 101 is jammed", "date_time": "2025-11-17T09:00", "attachments": [], "status": "Pending", "user_id": "1", "assignedTo": "tech1" },
+    { "id": 2, "title": "Wi-Fi issue", "description": "Can't connect to the office Wi-Fi", "date_time": "2025-11-16T14:30", "attachments": [], "status": "In Progress", "user_id": "1", "assignedTo": "tech1" },
+    { "id": 3, "title": "Software installation", "description": "Need MS Office installed on my laptop", "date_time": "2025-11-15T10:00", "attachments": [], "status": "Completed", "user_id": "2", "assignedTo": "tech1" },
+    { "id": 4, "title": "Computer overheating", "description": "Laptop gets too hot after 10 min", "date_time": "2025-11-15T12:00", "attachments": [], "status": "Pending", "user_id": "2", "assignedTo": "it1" }
+  ]
+}
