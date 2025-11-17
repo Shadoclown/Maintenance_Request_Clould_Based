@@ -4,7 +4,7 @@
 
 ### Programming Language
 
-- Flutter
+- Flutter / React
 - Sql
 - CSS + Tailwind
 - Python
