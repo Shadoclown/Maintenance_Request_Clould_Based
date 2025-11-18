@@ -4,7 +4,7 @@ import { supabase } from "./connect";
 export default function RequestForm({ user, onSuccess }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [locationBuilding, setLocationBuilding] = useState("BKK");
+  const [locationBuilding, setLocationBuilding] = useState("BKD");
   const [roomNumber, setRoomNumber] = useState("");
   const [images, setImages] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
@@ -13,7 +13,7 @@ export default function RequestForm({ user, onSuccess }) {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setLocationBuilding("BKK");
+    setLocationBuilding("BKD");
     setRoomNumber("");
     setImages([]);
     imagePreview.forEach((url) => URL.revokeObjectURL(url));
@@ -124,7 +124,7 @@ export default function RequestForm({ user, onSuccess }) {
             style={styles.select}
             required
           >
-            <option value="BKK">BKK</option>
+            <option value="BKD">BKD</option>
             <option value="RS">RS</option>
           </select>
           <input
