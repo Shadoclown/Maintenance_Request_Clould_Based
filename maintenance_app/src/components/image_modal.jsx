@@ -58,6 +58,7 @@ const styles = {
     fontSize: 24,
     cursor: "pointer",
     fontWeight: "bold",
+    backgroundColor: "white",
   },
   image: {
     maxWidth: "80vw",
