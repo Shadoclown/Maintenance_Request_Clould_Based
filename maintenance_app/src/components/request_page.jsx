@@ -2,12 +2,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "./connect";
 import RequestForm from "./request_form";
+import ImageModal from "./image_modal";
 
 export default function RequestPage({ user }) {
   const [requests, setRequests] = useState([]);
   const [statusLoading, setStatusLoading] = useState(false);
   const isUser = user.user_role === 1;
   const [activeTab, setActiveTab] = useState(isUser ? "submit" : "requests");
+  const [activeImage, setActiveImage] = useState(null);
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("request").select("*");
@@ -106,9 +108,14 @@ export default function RequestPage({ user }) {
                     <strong>Images:</strong>
                     <div style={styles.requestImagesGrid}>
                       {req.image_urls.map((url, index) => (
-                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                        <button
+                          key={url}
+                          type="button"
+                          onClick={() => setActiveImage(url)}
+                          style={styles.imageButton}
+                        >
                           <img src={url} alt={`Request ${index + 1}`} style={styles.requestImage} />
-                        </a>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -130,6 +137,8 @@ export default function RequestPage({ user }) {
           )}
         </div>
       )}
+
+      <ImageModal imageUrl={activeImage} onClose={() => setActiveImage(null)} />
     </div>
   );
 }
@@ -176,6 +185,12 @@ const styles = {
     flexWrap: "wrap",
     gap: 10,
     marginTop: 8,
+  },
+  imageButton: {
+    padding: 0,
+    border: "none",
+    background: "none",
+    cursor: "pointer",
   },
   requestImage: {
     width: 80,

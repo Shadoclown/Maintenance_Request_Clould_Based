@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "./connect";
 import RequestForm from "./request_form";
+import ImageModal from "./image_modal";
 
 export default function AdminPage({ user }) {
   const [requests, setRequests] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("requests");
+  const [activeImage, setActiveImage] = useState(null);
 
   useEffect(() => {
     fetchRoles();
@@ -129,10 +131,15 @@ export default function AdminPage({ user }) {
                   <div style={styles.requestImagesContainer}>
                     <strong>Images:</strong>
                     <div style={styles.requestImagesGrid}>
-                      {req.image_urls.map((url, index) => (
-                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                          <img src={url} alt={`Request ${req.request_id} image ${index + 1}`} style={styles.requestImage} />
-                        </a>
+                      {req.image_urls.map((url) => (
+                        <button
+                          key={url}
+                          type="button"
+                          style={styles.imageButton}
+                          onClick={() => setActiveImage(url)}
+                        >
+                          <img src={url} alt="Request attachment" style={styles.requestImage} />
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -154,6 +161,8 @@ export default function AdminPage({ user }) {
           )}
         </div>
       )}
+
+      <ImageModal imageUrl={activeImage} onClose={() => setActiveImage(null)} />
     </div>
   );
 }
@@ -201,6 +210,12 @@ const styles = {
     flexWrap: "wrap",
     gap: 10,
     marginTop: 8,
+  },
+  imageButton: {
+    padding: 0,
+    border: "none",
+    background: "none",
+    cursor: "pointer",
   },
   requestImage: {
     width: 90,
