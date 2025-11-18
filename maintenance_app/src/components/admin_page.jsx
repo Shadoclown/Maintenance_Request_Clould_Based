@@ -1,73 +1,73 @@
 // src/components/admin_page.jsx
 import React, { useState, useEffect } from "react";
-import { supabase } from "./connect";
+import {
+  fetchRoles,
+  fetchRequests as fetchRequestsApi,
+  updateRequestRole,
+  updateRequestStatus,
+} from "./connect";
 import RequestForm from "./request_form";
-import ImageModal from "./image_modal";
 
 export default function AdminPage({ user }) {
   const [requests, setRequests] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("requests");
-  const [activeImage, setActiveImage] = useState(null);
 
   useEffect(() => {
-    fetchRoles();
-    fetchRequests();
+    loadRoles();
+    loadRequests();
   }, []);
 
   // Fetch roles (Technician, IT Support)
-  const fetchRoles = async () => {
-    const { data, error } = await supabase.from("role").select("*");
-    if (error) console.error(error);
-    else {
-      const filteredRoles = data.filter((role) => {
+  const loadRoles = async () => {
+    try {
+      const data = await fetchRoles();
+      const filteredRoles = (Array.isArray(data) ? data : []).filter((role) => {
         const name = role.role_name?.toLowerCase();
         return name !== "user" && name !== "admin";
       });
       setRoles(filteredRoles);
+    } catch (err) {
+      console.error("Failed to load roles", err);
     }
   };
 
   // Fetch all requests
-  const fetchRequests = async () => {
-    const { data, error } = await supabase
-      .from("request")
-      .select("*, created_by(*)")
-      .order("created_at", { ascending: false });
-    if (error) console.error(error);
-    else setRequests(data);
+  const loadRequests = async () => {
+    try {
+      const data = await fetchRequestsApi(user);
+      setRequests(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to load requests", err);
+    }
   };
 
   const handleAssignRole = async (reqId, selectedRoleId) => {
     setLoading(true);
-    const roleId = selectedRoleId === "" ? null : Number(selectedRoleId);
-    const { error } = await supabase
-      .from("request")
-      .update({ request_role: roleId })
-      .eq("request_id", reqId);
-
-    if (error) {
-      console.error(error);
-    } else {
-      await fetchRequests();
+    try {
+      const roleId = selectedRoleId === "" ? null : Number(selectedRoleId);
+      await updateRequestRole(reqId, roleId);
+      await loadRequests();
+    } catch (err) {
+      console.error("Failed to assign role", err);
+      alert("Could not assign role. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleStatusChange = async (reqId, status) => {
     setLoading(true);
-    const { error } = await supabase
-      .from("request")
-      .update({ status })
-      .eq("request_id", reqId);
-
-    if (error) {
-      console.error(error);
-    } else {
-      await fetchRequests();
+    try {
+      await updateRequestStatus(reqId, status);
+      await loadRequests();
+    } catch (err) {
+      console.error("Failed to update status", err);
+      alert("Could not update status. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const tabs = [
@@ -95,7 +95,7 @@ export default function AdminPage({ user }) {
       {activeTab === "submit" && (
         <div style={styles.card}>
           <h3 style={styles.cardTitle}>Submit Request</h3>
-          <RequestForm user={user} onSuccess={fetchRequests} />
+          <RequestForm user={user} onSuccess={loadRequests} />
         </div>
       )}
 
@@ -108,7 +108,7 @@ export default function AdminPage({ user }) {
               <div key={req.request_id} style={styles.requestCard}>
                 <p><strong>Title:</strong> {req.title}</p>
                 <p><strong>Description:</strong> {req.description}</p>
-                <p><strong>Created By:</strong> {req.created_by.user_email}</p>
+                <p><strong>Created By:</strong> {req.created_by?.user_email || "Unknown user"}</p>
                 {req.location && (
                   <p><strong>Location:</strong> {req.location}</p>
                 )}
@@ -127,23 +127,6 @@ export default function AdminPage({ user }) {
                     ))}
                   </select>
                 </p>
-                {Array.isArray(req.image_urls) && req.image_urls.length > 0 && (
-                  <div style={styles.requestImagesContainer}>
-                    <strong>Images:</strong>
-                    <div style={styles.requestImagesGrid}>
-                      {req.image_urls.map((url) => (
-                        <button
-                          key={url}
-                          type="button"
-                          style={styles.imageButton}
-                          onClick={() => setActiveImage(url)}
-                        >
-                          <img src={url} alt="Request attachment" style={styles.requestImage} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <p>
                   <strong>Status:</strong>{" "}
                   <select
@@ -162,7 +145,6 @@ export default function AdminPage({ user }) {
         </div>
       )}
 
-      <ImageModal imageUrl={activeImage} onClose={() => setActiveImage(null)} />
     </div>
   );
 }
@@ -201,28 +183,5 @@ const styles = {
     borderRadius: 8,
     border: "1px solid #ccc",
     backgroundColor: "#f9f9f9",
-  },
-  requestImagesContainer: {
-    marginTop: 10,
-  },
-  requestImagesGrid: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 8,
-  },
-  imageButton: {
-    padding: 0,
-    border: "none",
-    background: "none",
-    cursor: "pointer",
-  },
-  requestImage: {
-    width: 90,
-    height: 90,
-    objectFit: "cover",
-    borderRadius: 8,
-    border: "2px solid #ddd",
-    cursor: "pointer",
   },
 };

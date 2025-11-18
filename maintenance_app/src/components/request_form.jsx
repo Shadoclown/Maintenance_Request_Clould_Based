@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { supabase } from "./connect";
+import { submitRequest } from "./connect";
 
 export default function RequestForm({ user, onSuccess }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [locationBuilding, setLocationBuilding] = useState("BKD");
   const [roomNumber, setRoomNumber] = useState("");
-  const [images, setImages] = useState([]);
-  const [imagePreview, setImagePreview] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
@@ -15,26 +13,6 @@ export default function RequestForm({ user, onSuccess }) {
     setDescription("");
     setLocationBuilding("BKD");
     setRoomNumber("");
-    setImages([]);
-    imagePreview.forEach((url) => URL.revokeObjectURL(url));
-    setImagePreview([]);
-  };
-
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    imagePreview.forEach((url) => URL.revokeObjectURL(url));
-    setImages(files);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setImagePreview(previews);
-  };
-
-  const removeImage = (index) => {
-    const nextImages = images.filter((_, i) => i !== index);
-    const nextPreviews = imagePreview.filter((_, i) => i !== index);
-    const removedPreview = imagePreview[index];
-    if (removedPreview) URL.revokeObjectURL(removedPreview);
-    setImages(nextImages);
-    setImagePreview(nextPreviews);
   };
 
   const handleSubmit = async (e) => {
@@ -47,45 +25,13 @@ export default function RequestForm({ user, onSuccess }) {
     setSubmitting(true);
 
     try {
-      const location = `${locationBuilding}-${roomNumber}`;
-      const imageUrls = [];
-
-      for (let i = 0; i < images.length; i += 1) {
-        const image = images[i];
-        const fileExt = image.name.split(".").pop();
-        const fileName = `${Date.now()}_${i}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("request_picture")
-          .upload(fileName, image, { cacheControl: "3600", upsert: false });
-
-        if (uploadError) {
-          console.error("Image upload error:", uploadError);
-          alert(
-            `Failed to upload image ${i + 1}. Error: ${uploadError.message}\n\n` +
-              "Please make sure:\n1. You ran the SQL policies script\n2. The bucket 'request_picture' exists\n3. You are logged in"
-          );
-          throw uploadError;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from("request_picture")
-          .getPublicUrl(fileName);
-        imageUrls.push(urlData.publicUrl);
-      }
-
-      const { error } = await supabase.from("request").insert([
-        {
-          title,
-          description,
-          location,
-          image_urls: imageUrls.length > 0 ? imageUrls : null,
-          request_role: null,
-          status: "Pending",
-          created_by: user.user_id,
-        },
-      ]);
-
-      if (error) throw error;
+      await submitRequest({
+        title,
+        description,
+        locationBuilding,
+        roomNumber,
+        userId: user.user_id,
+      });
 
       resetForm();
       if (onSuccess) await onSuccess();
@@ -136,28 +82,6 @@ export default function RequestForm({ user, onSuccess }) {
             required
           />
         </div>
-      </div>
-      <div style={styles.imageUploadContainer}>
-        <label style={styles.label}>Upload Images (optional):</label>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageChange}
-          style={styles.fileInput}
-        />
-        {imagePreview.length > 0 && (
-          <div style={styles.imagePreviewContainer}>
-            {imagePreview.map((preview, index) => (
-              <div key={preview} style={styles.imagePreviewItem}>
-                <img src={preview} alt={`Preview ${index + 1}`} style={styles.previewImage} />
-                <button type="button" onClick={() => removeImage(index)} style={styles.removeButton}>
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
       <button type="submit" style={styles.button} disabled={submitting}>
         {submitting ? "Submitting..." : "Submit Request"}
@@ -212,49 +136,5 @@ const styles = {
     border: "1px solid #ccc",
     fontSize: 16,
     flex: 1,
-  },
-  imageUploadContainer: {
-    marginBottom: 15,
-  },
-  fileInput: {
-    padding: 8,
-    fontSize: 14,
-    marginBottom: 10,
-    cursor: "pointer",
-  },
-  imagePreviewContainer: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 10,
-  },
-  imagePreviewItem: {
-    position: "relative",
-    width: 100,
-    height: 100,
-  },
-  previewImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    borderRadius: 8,
-    border: "2px solid #ddd",
-  },
-  removeButton: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#dc3545",
-    color: "#fff",
-    border: "none",
-    borderRadius: "50%",
-    width: 24,
-    height: 24,
-    cursor: "pointer",
-    fontSize: 14,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "bold",
   },
 };

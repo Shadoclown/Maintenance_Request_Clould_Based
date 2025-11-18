@@ -1,6 +1,6 @@
 // src/components/login_page.jsx
 import React, { useState } from "react";
-import { supabase } from "./connect";
+import { login } from "./connect";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -9,20 +9,17 @@ export default function Login({ onLogin }) {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Fetch user with email and password
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_email", email)
-      .eq("user_password", password)
-      .single();
-
-    if (error || !user) {
-      alert("Login failed: wrong email or password");
-      return;
+    try {
+      const user = await login(email, password);
+      if (!user) {
+        alert("Login failed: wrong email or password");
+        return;
+      }
+      onLogin(user);
+    } catch (err) {
+      console.error("Login error", err);
+      alert(err.message || "Login failed");
     }
-
-    onLogin(user); // pass user to App.jsx
   };
 
   return (
