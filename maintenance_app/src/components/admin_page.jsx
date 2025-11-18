@@ -1,11 +1,13 @@
 // src/components/admin_page.jsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "./connect";
+import RequestForm from "./request_form";
 
 export default function AdminPage({ user }) {
   const [requests, setRequests] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("requests");
 
   useEffect(() => {
     fetchRoles();
@@ -16,7 +18,13 @@ export default function AdminPage({ user }) {
   const fetchRoles = async () => {
     const { data, error } = await supabase.from("role").select("*");
     if (error) console.error(error);
-    else setRoles(data);
+    else {
+      const filteredRoles = data.filter((role) => {
+        const name = role.role_name?.toLowerCase();
+        return name !== "user" && name !== "admin";
+      });
+      setRoles(filteredRoles);
+    }
   };
 
   // Fetch all requests
@@ -29,15 +37,19 @@ export default function AdminPage({ user }) {
     else setRequests(data);
   };
 
-  const handleAssignRole = async (reqId, roleId) => {
+  const handleAssignRole = async (reqId, selectedRoleId) => {
     setLoading(true);
+    const roleId = selectedRoleId === "" ? null : Number(selectedRoleId);
     const { error } = await supabase
       .from("request")
       .update({ request_role: roleId })
       .eq("request_id", reqId);
 
-    if (error) console.error(error);
-    else fetchRequests();
+    if (error) {
+      console.error(error);
+    } else {
+      await fetchRequests();
+    }
     setLoading(false);
   };
 
@@ -48,65 +60,154 @@ export default function AdminPage({ user }) {
       .update({ status })
       .eq("request_id", reqId);
 
-    if (error) console.error(error);
-    else fetchRequests();
+    if (error) {
+      console.error(error);
+    } else {
+      await fetchRequests();
+    }
     setLoading(false);
   };
+
+  const tabs = [
+    { id: "requests", label: "Requests" },
+    { id: "submit", label: "Submit Request" },
+  ];
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Admin Panel: Assign Requests</h2>
-      {requests.length === 0 ? (
-        <p>No requests found.</p>
-      ) : (
-        requests.map((req) => (
-          <div key={req.request_id} style={styles.requestCard}>
-            <p><strong>Title:</strong> {req.title}</p>
-            <p><strong>Description:</strong> {req.description}</p>
-            <p><strong>Created By:</strong> {req.created_by.user_email}</p>
-            <p>
-              <strong>Assigned Role:</strong>{" "}
-              <select
-                value={req.request_role || ""}
-                onChange={(e) => handleAssignRole(req.request_id, Number(e.target.value))}
-                disabled={loading}
-              >
-                <option value="">Unassigned</option>
-                {roles.map((role) => (
-                  <option key={role.role_id} value={role.role_id}>
-                    {role.role_name}
-                  </option>
-                ))}
-              </select>
-            </p>
-            <p>
-              <strong>Status:</strong>{" "}
-              <select
-                value={req.status}
-                onChange={(e) => handleStatusChange(req.request_id, e.target.value)}
-                disabled={loading}
-              >
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </p>
-          </div>
-        ))
+
+      <div style={styles.tabsContainer}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            style={activeTab === tab.id ? { ...styles.tabButton, ...styles.tabButtonActive } : styles.tabButton}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "submit" && (
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>Submit Request</h3>
+          <RequestForm user={user} onSuccess={fetchRequests} />
+        </div>
+      )}
+
+      {activeTab === "requests" && (
+        <div style={styles.card}>
+          {requests.length === 0 ? (
+            <p>No requests found.</p>
+          ) : (
+            requests.map((req) => (
+              <div key={req.request_id} style={styles.requestCard}>
+                <p><strong>Title:</strong> {req.title}</p>
+                <p><strong>Description:</strong> {req.description}</p>
+                <p><strong>Created By:</strong> {req.created_by.user_email}</p>
+                {req.location && (
+                  <p><strong>Location:</strong> {req.location}</p>
+                )}
+                <p>
+                  <strong>Assigned Role:</strong>{" "}
+                  <select
+                    value={req.request_role ?? ""}
+                    onChange={(e) => handleAssignRole(req.request_id, e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="">Unassigned</option>
+                    {roles.map((role) => (
+                      <option key={role.role_id} value={role.role_id}>
+                        {role.role_name}
+                      </option>
+                    ))}
+                  </select>
+                </p>
+                {Array.isArray(req.image_urls) && req.image_urls.length > 0 && (
+                  <div style={styles.requestImagesContainer}>
+                    <strong>Images:</strong>
+                    <div style={styles.requestImagesGrid}>
+                      {req.image_urls.map((url, index) => (
+                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt={`Request ${req.request_id} image ${index + 1}`} style={styles.requestImage} />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p>
+                  <strong>Status:</strong>{" "}
+                  <select
+                    value={req.status}
+                    onChange={(e) => handleStatusChange(req.request_id, e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </p>
+              </div>
+            ))
+          )}
+        </div>
       )}
     </div>
   );
 }
 
 const styles = {
-  container: { maxWidth: 700, margin: "50px auto", padding: 20 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: { maxWidth: 800, margin: "50px auto", padding: 20 },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 20 },
+  tabsContainer: { display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" },
+  tabButton: {
+    padding: "10px 18px",
+    borderRadius: 999,
+    border: "1px solid #ccc",
+    backgroundColor: "#f5f5f5",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#333",
+    transition: "background-color 0.2s, color 0.2s, border-color 0.2s",
+  },
+  tabButtonActive: {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    borderColor: "#007bff",
+  },
+  card: {
+    padding: 20,
+    marginBottom: 30,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    boxShadow: "0px 5px 15px rgba(0,0,0,0.15)",
+  },
+  cardTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 18 },
   requestCard: {
     padding: 15,
     marginBottom: 20,
     borderRadius: 8,
     border: "1px solid #ccc",
-    backgroundColor: "#fff",
-    boxShadow: "0px 3px 10px rgba(0,0,0,0.1)",
+    backgroundColor: "#f9f9f9",
+  },
+  requestImagesContainer: {
+    marginTop: 10,
+  },
+  requestImagesGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 8,
+  },
+  requestImage: {
+    width: 90,
+    height: 90,
+    objectFit: "cover",
+    borderRadius: 8,
+    border: "2px solid #ddd",
+    cursor: "pointer",
   },
 };

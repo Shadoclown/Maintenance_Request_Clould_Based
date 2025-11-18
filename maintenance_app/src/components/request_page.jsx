@@ -1,18 +1,15 @@
 // src/components/request_page.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "./connect";
+import RequestForm from "./request_form";
 
 export default function RequestPage({ user }) {
   const [requests, setRequests] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const isUser = user.user_role === 1;
+  const [activeTab, setActiveTab] = useState(isUser ? "submit" : "requests");
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     let query = supabase.from("request").select("*");
 
     // Role-based filtering
@@ -27,10 +24,18 @@ export default function RequestPage({ user }) {
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) console.error(error);
     else setRequests(data);
-  };
+  }, [user.user_id, user.user_role]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    setActiveTab(user.user_role === 1 ? "submit" : "requests");
+  }, [user.user_role]);
 
   const handleStatusChange = async (reqId, newStatus) => {
-    setLoading(true);
+    setStatusLoading(true);
     const { error } = await supabase
       .from("request")
       .update({ status: newStatus })
@@ -38,92 +43,116 @@ export default function RequestPage({ user }) {
 
     if (error) console.error(error);
     else fetchRequests();
-    setLoading(false);
+    setStatusLoading(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!title || !description) return;
+  const tabs = isUser
+    ? [
+        { id: "submit", label: "Submit Request" },
+        { id: "requests", label: "My Requests" },
+      ]
+    : [
+        { id: "requests", label: "Requests" },
+        { id: "submit", label: "Submit Request" },
+      ];
 
-    setLoading(true);
-    const { error } = await supabase.from("request").insert([
-      {
-        title,
-        description,
-        request_role: null, // admin can assign later
-        status: "Pending",
-        created_by: user.user_id,
-      },
-    ]);
-
-    if (error) console.error(error);
-    else {
-      setTitle("");
-      setDescription("");
-      fetchRequests();
-    }
-    setLoading(false);
-  };
+  const requestsTitle = isUser
+    ? "Request History"
+    : user.user_role === 2 || user.user_role === 3
+    ? "Assigned Requests"
+    : "Requests";
 
   return (
     <div style={styles.container}>
-      {user.user_role === 1 && (
+      <div style={styles.tabsContainer}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            style={activeTab === tab.id ? { ...styles.tabButton, ...styles.tabButtonActive } : styles.tabButton}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "submit" && (
         <div style={styles.card}>
           <h2 style={styles.title}>Submit Request</h2>
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <input
-              type="text"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              style={styles.input}
-              required
-            />
-            <textarea
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={{ ...styles.input, height: 100, resize: "none" }}
-              required
-            />
-            <button type="submit" style={styles.button} disabled={loading}>
-              {loading ? "Submitting..." : "Submit Request"}
-            </button>
-          </form>
+          <RequestForm user={user} onSuccess={fetchRequests} />
         </div>
       )}
 
-      <div style={styles.card}>
-        <h2 style={styles.title}>Requests</h2>
-        {requests.length === 0 ? (
-          <p>No requests found.</p>
-        ) : (
-          requests.map((req) => (
-            <div key={req.request_id} style={styles.requestCard}>
-              <strong>{req.title}</strong>
-              <p>{req.description}</p>
-              <p>Status: {req.status}</p>
-              {(user.user_role === 2 || user.user_role === 3 || user.user_role === 4) && (
-                <select
-                  value={req.status}
-                  onChange={(e) => handleStatusChange(req.request_id, e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+      {activeTab === "requests" && (
+        <div style={styles.card}>
+          <h2 style={styles.title}>{requestsTitle}</h2>
+          {requests.length === 0 ? (
+            <p>No requests found.</p>
+          ) : (
+            requests.map((req) => (
+              <div key={req.request_id} style={styles.requestCard}>
+                <strong>{req.title}</strong>
+                <p>{req.description}</p>
+                {req.location && (
+                  <p>
+                    <strong>Location:</strong> {req.location}
+                  </p>
+                )}
+                <p>Status: {req.status}</p>
+
+                {req.image_urls && req.image_urls.length > 0 && (
+                  <div style={styles.requestImagesContainer}>
+                    <strong>Images:</strong>
+                    <div style={styles.requestImagesGrid}>
+                      {req.image_urls.map((url, index) => (
+                        <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                          <img src={url} alt={`Request ${index + 1}`} style={styles.requestImage} />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(user.user_role === 2 || user.user_role === 3 || user.user_role === 4) && (
+                  <select
+                    value={req.status}
+                    onChange={(e) => handleStatusChange(req.request_id, e.target.value)}
+                    disabled={statusLoading}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
-  container: { maxWidth: 600, margin: "50px auto", padding: 20 },
+  container: { maxWidth: 700, margin: "50px auto", padding: 20 },
+  tabsContainer: { display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" },
+  tabButton: {
+    padding: "10px 18px",
+    borderRadius: 999,
+    border: "1px solid #ccc",
+    backgroundColor: "#f5f5f5",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#333",
+    transition: "background-color 0.2s, color 0.2s, border-color 0.2s",
+  },
+  tabButtonActive: {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    borderColor: "#007bff",
+  },
   card: {
     padding: 20,
     marginBottom: 30,
@@ -132,14 +161,28 @@ const styles = {
     boxShadow: "0px 5px 15px rgba(0,0,0,0.15)",
   },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-  form: { display: "flex", flexDirection: "column" },
-  input: { padding: 12, marginBottom: 15, borderRadius: 8, border: "1px solid #ccc", fontSize: 16 },
-  button: { padding: 12, backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: 8, fontSize: 16, cursor: "pointer" },
   requestCard: {
     marginBottom: 20,
     padding: 15,
     borderRadius: 8,
     border: "1px solid #ccc",
     backgroundColor: "#f9f9f9",
+  },
+  requestImagesContainer: {
+    marginTop: 10,
+  },
+  requestImagesGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 8,
+  },
+  requestImage: {
+    width: 80,
+    height: 80,
+    objectFit: "cover",
+    borderRadius: 8,
+    border: "2px solid #ddd",
+    cursor: "pointer",
   },
 };

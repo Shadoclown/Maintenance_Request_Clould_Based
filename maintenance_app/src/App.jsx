@@ -31,7 +31,9 @@ export default function App() {
         {/* Request form and requests page for users and support roles */}
         <Route
           path="/request"
-          element={<RequestPage user={user} />}
+          element={
+            user.user_role === 4 ? <Navigate to="/admin" replace /> : <RequestPage user={user} />
+          }
         />
 
         {/* Admin page */}
