@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd maintenance_app
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: maintenance_app/build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - maintenance_app/node_modules/**/*
