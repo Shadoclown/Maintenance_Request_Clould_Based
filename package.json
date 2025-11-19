@@ -1,0 +1,22 @@
+{
+  "name": "maintenance-request-cloud-based",
+  "version": "1.0.0",
+  "description": "Maintenance Request Cloud-Based Application",
+  "private": true,
+  "scripts": {
+    "start": "cd maintenance_app && npm start",
+    "build": "cd maintenance_app && npm run build",
+    "test": "cd maintenance_app && npm test",
+    "install-deps": "cd maintenance_app && npm install",
+    "deploy": "npm run build && echo 'Build completed. Ready for AWS Amplify deployment.'",
+    "dev": "npm run start"
+  },
+  "keywords": [
+    "maintenance",
+    "request",
+    "cloud",
+    "react"
+  ],
+  "author": "",
+  "license": "ISC"
+}
