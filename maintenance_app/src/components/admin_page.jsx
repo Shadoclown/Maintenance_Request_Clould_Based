@@ -4,7 +4,7 @@ import { supabase } from "./connect";
 import RequestForm from "./request_form";
 import ImageModal from "./image_modal";
 
-export default function AdminPage({ user }) {
+export default function AdminPage({ user, onLogout }) {
   const [requests, setRequests] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +77,15 @@ export default function AdminPage({ user }) {
 
   return (
     <div style={styles.container}>
+      <div style={styles.header}>
+        <button 
+          type="button"
+          onClick={onLogout}
+          style={styles.backButton}
+        >
+          ← Back to Login
+        </button>
+      </div>
       <h2 style={styles.title}>Admin Panel: Assign Requests</h2>
 
       <div style={styles.tabsContainer}>
@@ -169,6 +178,18 @@ export default function AdminPage({ user }) {
 
 const styles = {
   container: { maxWidth: 800, margin: "50px auto", padding: 20 },
+  header: { marginBottom: 20 },
+  backButton: {
+    padding: "10px 20px",
+    borderRadius: 8,
+    border: "1px solid #ccc",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#333",
+    transition: "background-color 0.2s, border-color 0.2s",
+  },
   title: { fontSize: 26, fontWeight: "bold", marginBottom: 20 },
   tabsContainer: { display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" },
   tabButton: {

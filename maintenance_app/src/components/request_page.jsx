@@ -4,7 +4,7 @@ import { supabase } from "./connect";
 import RequestForm from "./request_form";
 import ImageModal from "./image_modal";
 
-export default function RequestPage({ user }) {
+export default function RequestPage({ user, onLogout }) {
   const [requests, setRequests] = useState([]);
   const [statusLoading, setStatusLoading] = useState(false);
   const isUser = user.user_role === 1;
@@ -66,6 +66,15 @@ export default function RequestPage({ user }) {
 
   return (
     <div style={styles.container}>
+      <div style={styles.header}>
+        <button 
+          type="button"
+          onClick={onLogout}
+          style={styles.backButton}
+        >
+          ← Back to Login
+        </button>
+      </div>
       <div style={styles.tabsContainer}>
         {tabs.map((tab) => (
           <button
@@ -145,6 +154,18 @@ export default function RequestPage({ user }) {
 
 const styles = {
   container: { maxWidth: 700, margin: "50px auto", padding: 20 },
+  header: { marginBottom: 20 },
+  backButton: {
+    padding: "10px 20px",
+    borderRadius: 8,
+    border: "1px solid #ccc",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#333",
+    transition: "background-color 0.2s, border-color 0.2s",
+  },
   tabsContainer: { display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" },
   tabButton: {
     padding: "10px 18px",

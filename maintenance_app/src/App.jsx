@@ -8,6 +8,10 @@ import AdminPage from "./components/admin_page";
 export default function App() {
   const [user, setUser] = useState(null);
 
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   // If not logged in, show login page
   if (!user) {
     return <Login onLogin={setUser} />;
@@ -32,14 +36,14 @@ export default function App() {
         <Route
           path="/request"
           element={
-            user.user_role === 4 ? <Navigate to="/admin" replace /> : <RequestPage user={user} />
+            user.user_role === 4 ? <Navigate to="/admin" replace /> : <RequestPage user={user} onLogout={handleLogout} />
           }
         />
 
         {/* Admin page */}
         <Route
           path="/admin"
-          element={user.user_role === 4 ? <AdminPage user={user} /> : <Navigate to="/request" />}
+          element={user.user_role === 4 ? <AdminPage user={user} onLogout={handleLogout} /> : <Navigate to="/request" />}
         />
 
         {/* Fallback for unknown routes */}
